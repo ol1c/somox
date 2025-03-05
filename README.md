@@ -1,2 +1,2 @@
 # somox
-SOMOX lab repository
+SOMOX uni lab repository
