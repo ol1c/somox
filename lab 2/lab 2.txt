@@ -1,0 +1,120 @@
+// zrobione wszystkie 5/5
+import Foundation
+
+// 1.1
+func minValue (_ a: Int, _ b: Int) -> Int {
+  if  a > b {
+   return a
+  }
+  else {
+  return b
+  }
+}
+print(minValue(3, 4))
+print(minValue(7, 4))
+print(minValue(1, 1))
+
+// 1.2
+func lastDigit (_ n: Int) -> Int {
+  return (n % 10)
+}
+print(lastDigit(1234))
+
+// 1.3
+func divides (_ a: Int, _ b: Int) -> Bool {
+  return (a % b) == 0
+}
+func countDivisors (_ n: Int) -> Int {
+  var divisors = 0
+  for i in 1...n {
+    if divides(n, i) {
+      divisors += 1
+    }
+  }
+  return divisors
+}
+func isPrime (_ n: Int) -> Bool {
+  if n == 0 || n == 1 {
+    return false
+  }
+  return countDivisors(n) <= 2
+}
+print(divides(7, 3))
+print(divides(8, 4))
+print(countDivisors(1))
+print(countDivisors(10))
+print(countDivisors(12))
+print(isPrime(3))
+print(isPrime(8))
+print(isPrime(13))
+
+// 2.1
+func smartBart (_ n: Int, _ closeur: () -> ()) {
+  for _ in 1...n {
+    closeur()
+  }
+}
+smartBart(11){print("I will pass this course with best mark, because Swift is great!")}
+
+// 2.2
+let numbers = [10, 16, 18, 30, 38, 40, 44, 50]
+var newNumbers = numbers.filter{$0 % 4 == 0}
+print(newNumbers)
+
+// 2.3
+let largestNumber = numbers.reduce(Int.min){max($0, $1)}
+print(largestNumber)
+
+// 2.4
+var strings = ["Gdansk", "University", "of", "Technology"]
+print(strings.reduce(""){$0 + $1 + " "})
+
+// 2.5
+let numbers2 = [1, 2 ,3 ,4, 5, 6]
+let sumOfTheSquaresOfAllTheOddNumbers = numbers2.filter{$0 % 2 != 0}.map{$0 * $0}.reduce(0){$0 + $1}
+print(sumOfTheSquaresOfAllTheOddNumbers)
+
+// 3.1
+func minmax (_ a: Int, _ b: Int) -> (min: Int, max: Int) {
+  if a > b {
+    return (min: b, max: a)
+  }
+  else {
+    return (min: a, max: b)
+  }
+}
+let result = minmax(10, 5)
+print("Min: \(result.min), Max: \(result.max)")
+
+// 3.2
+func countAppearance (_ stringsArray: [String]) -> ([(String, Int)]) {
+  var stringCounts: [String: Int] = [:]
+  for string in stringsArray {
+    stringCounts[string, default: 0] += 1
+  }
+  return stringCounts.map{($0.key, $0.value)}
+}
+var stringsArray = ["gdansk", "university", "gdansk", "university", "university", "of",  "technology", "technology", "gdansk", "gdansk"]
+let countedStrings = countAppearance(stringsArray)
+print(countedStrings)
+
+// 4. 1
+enum Day: Int {
+  case Monday = 1
+  case Tuesday
+  case Wednesday
+  case Thursday
+  case Friday
+  case Saturday
+  case Sunday
+
+  func whatDayIsToday() -> String {
+    return "Today is \(self)"
+  }
+}
+for day in 1...7 {
+  if let today = Day(rawValue: day) {
+    print(today.whatDayIsToday())
+  }
+}
+

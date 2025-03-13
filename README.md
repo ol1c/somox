@@ -1,2 +1,0 @@
-# somox
-SOMOX lab repository
