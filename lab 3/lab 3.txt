@@ -1,0 +1,215 @@
+// zrobione wszystkie 5/5
+import Foundation
+// 1, 4
+struct Location {
+  let id: Int
+  var type: String
+  var name: String
+  var rating: Int 
+  init(id: Int, type: String, name: String, rating: Int) {
+    precondition(1...5 ~= rating, "Rating must be between 1 and 5")
+    self.id = id
+    self.type = type
+    self.name = name
+    self.rating = rating
+  }
+}
+
+struct City {
+  let id: Int
+  let name: String
+  var description: String
+  var latitude: Double
+  var longitude: Double
+  var tags: [String]
+  var locations: [Location]
+  init(id: Int, name: String, description: String, latitude: Double, longitude: Double, tags: [String], locations: [Location]) {
+    self.id = id
+    self.name = name
+    self.latitude = latitude
+    self.longitude = longitude
+    self.description = description
+    self.tags = tags
+    self.locations = locations
+  }
+}
+var cities: [City] = []
+let descriptions = ["Beautiful city", "Historic place", "Modern metropolis"]
+let tagOptions = ["seaside", "party", "sport", "music", "nature"]
+let locationOptions = ["restaurant", "pub", "museum", "monument"]
+for i in 1...20 {
+  var randomLocations: [Location] = []
+  for j in 1...Int.random(in: 1...5) {
+    let randomLocation = locationOptions.randomElement() ?? "location"
+    randomLocations.append(Location(
+      id: j,
+      type: randomLocation,
+      name: "Location\(i).\(j)",
+      rating: Int.random(in: 1...5)
+    ))
+  }
+
+  let randomTag1 = tagOptions.randomElement() ?? "tag"
+  var randomTag2 = tagOptions.randomElement() ?? "tag"
+  while randomTag1 == randomTag2 {
+    randomTag2 = tagOptions.randomElement() ?? "tag"
+  }
+  cities.append(City(
+    id: i,
+    name: "City\(i%15)",
+    description: descriptions.randomElement() ?? "No description",
+    latitude: 31.25 + (Double(i) * 2.75),
+    longitude: 10.0 + (Double(i) * 4.15),
+    tags: [randomTag1, randomTag2],
+    locations: randomLocations
+  ))
+}
+
+// 2.1
+func findCitiesByName(_ cities: [City], _ name: String) -> [City] {
+  var result: [City] = []
+  for city in cities {
+    if city.name == name {
+      result.append(city)
+    }
+  }
+  return result
+}
+let sameNameCities = findCitiesByName(cities, "City1")
+print("Same names:")
+for city in sameNameCities {
+  print("\(city.name)(\(city.id))")
+}
+
+// 2.2
+func findCitiesByKeyword(_ cities: [City], _  keyword: String)-> [City] {
+  var result: [City] = []
+  for city in cities {
+    for tag in city.tags {
+      if tag == keyword {
+        result.append(city)
+        break
+      }
+    }
+  }
+  return result
+}
+
+print(" ")
+print("Cities with keyword: sport")
+for city in findCitiesByKeyword(cities, "sport") {
+  print("\(city.name)(\(city.id)) keywords: \(city.tags)")
+}
+
+// 3.1
+func calculateDistance(_ city1: City, _ city2: City) -> Double {
+  return sqrt(pow((city1.longitude - city2.longitude), 2) + pow((city1.latitude - city2.latitude), 2))
+}
+
+print(" ")
+print("Distance between cities: id:\(sameNameCities[0].id), id:\(sameNameCities[1].id)")
+print(calculateDistance(sameNameCities[0], sameNameCities[1]))
+
+// 3.2
+func displayClosestAndFarthestCities(_ cities: [City], longitude: Double, latitude: Double) {
+  var distance = sqrt(pow((cities[0].longitude - longitude), 2) + pow((cities[0].latitude - latitude), 2))
+  var closestDistance = distance
+  var farthestDistance = distance
+  var closestCity =  cities[0]
+  var farthestCity =  cities[0]
+  for city in cities {
+    distance = sqrt(pow((city.longitude - longitude), 2) + pow((city.latitude - latitude), 2))
+    if distance > farthestDistance {
+      farthestDistance = distance
+      farthestCity = city
+    }
+    if distance < closestDistance {
+      closestDistance = distance
+      closestCity = city
+    }
+  }
+  print("Closest city: \(closestCity.name)(\(closestCity.id))")
+  
+  print("Farthest city: \(farthestCity.name)(\(farthestCity.id))")
+}
+
+print(" ")
+displayClosestAndFarthestCities(cities, longitude: 31.42, latitude: 22.12)
+
+// 3.3
+func displayFarthestCities(_ cities: [City]) {
+  var distance = calculateDistance(cities[0], cities[1])
+  var farthestDistance = distance
+  var farthestCities =  [cities[0], cities[1]]
+  var i = 0
+  while i < cities.count {
+   var j = i + 1
+    while j < cities.count {
+      distance = calculateDistance(cities[i], cities[j])
+      if distance > farthestDistance {
+        farthestDistance = distance
+        farthestCities = [cities[i], cities[j]]
+      }
+      j += 1
+    }
+    i += 1
+  }
+  print("Farthest cities: \(farthestCities[0].name)(\(farthestCities[0].id)) and \(farthestCities[1].name)(\(farthestCities[1].id))")
+  print("Distance: \(farthestDistance)")
+}
+
+print(" ")
+displayFarthestCities(cities)
+
+// 5.1
+func displayCitiesWith5starRestaurants(_ cities: [City]) {
+  var citiesWith5starRestaurants: [City] = []
+  for city in cities {
+    for location in city.locations {
+      if location.type == "restaurant" && location.rating == 5 {
+        citiesWith5starRestaurants.append(city)
+        break
+      }
+    }
+  }
+  print("Cities with 5 star restaurants:")
+  for city in citiesWith5starRestaurants {
+    print("\(city.name)(\(city.id))")
+    //print(city.locations)
+  }
+}
+
+print(" ")
+displayCitiesWith5starRestaurants(cities)
+
+// 5.2
+func locationsFromCity(_ city: City) -> [Location] {
+  return city.locations.sorted{$0.rating > $1.rating}
+}
+
+print(" ")
+print("Locations from City1(1):")
+for location in locationsFromCity(cities[0]) {
+  print("\(location.name)(\(location.type)) - rating: \(location.rating)")
+}
+
+// 5.3
+func displayAll5starLocationsInCities(_ cities: [City]) {
+  for city in cities {
+    var locations5star: [Location] = []
+    var count = 0
+    for location in city.locations {
+      if location.rating == 5 {
+        count += 1
+        locations5star.append(location)
+      }
+    }
+    print("\(city.name)(\(city.id)) has \(count) 5-star locations:")
+    for location in locations5star {
+      print("\(location.name)(\(location.type))")
+    }
+  }
+}
+
+print(" ")
+displayAll5starLocationsInCities(cities)
