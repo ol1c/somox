@@ -1,0 +1,162 @@
+// zrobione wszystkie 5/5
+import Foundation
+
+enum Level: Int {
+  case EASY = 0
+  case MEDIUM
+  case HARD
+
+  func getNewBoard(_ base: [(Int, [String])]) -> (newBoard: [String], newWord: String) {
+    let words = base[self.rawValue].1
+    guard let word = words.randomElement() else {
+        return (["_", "_", "_", "_"], "game")
+    }
+    let board = word.map { $0 == " " ? " " : "_" } 
+
+    return (board, word)
+  }
+}
+class Game {
+    var board: [String] = []
+    var word: String = ""
+    var level: Level = Level.EASY
+    var attempts: Int = 0
+    var base: [(Int, [String])] = []
+    let classic_base: [(Int, [String])] = [
+        (0, ["apple", "chair", "ocean", "smile"]),
+        (1, ["thunder", "lantern", "giraffe", "whisper"]),
+        (2, ["golden gate", "broken mirror", "crystal clear", "hidden treasure"])
+    ]
+     let film_base: [(Int, [String])] = [
+        (0, ["titanic", "avatar", "joker", "shrek"]),
+        (1, ["fight club", "interstellar", "forrest gump", "pulp fiction"]),
+        (2, ["the grand budapest hotel", "no country for old men", "requiem for a dream", "12 angry men"])
+    ]
+    let country_base: [(Int, [String])] = [
+        (0, ["polska", "niemcy", "hiszpania", "usa"]),
+        (1, ["korea południowa", "rpa", "nowa zelandia", "norwegia"]),
+        (2, ["madagaskar", "papua nowa gwinea", "sri lanka", "san marino"])
+    ]
+
+
+  init() {
+    self.newGame()
+  }
+
+  func drawBoard() {
+    print(self.board.reduce(""){$0 + " " + $1})
+  }
+
+  func checkChar(_ char: Character) {
+    for (i, wordChar) in self.word.enumerated() {
+      if wordChar == char { 
+        self.board[i] = String(wordChar)
+      }
+    }
+  }
+
+  func checkBuffor(_ buffor: String) {
+    if buffor == self.word {
+        for char in buffor {
+            self.checkChar(char)
+        }
+    }
+  }
+
+  func isWin() -> Bool {
+    return !self.board.contains("_")
+  }
+  
+  func getLevel() {
+    print("Easy - e")
+    print("Medium - m")
+    print("Hard - h")
+
+    let input = readLine()
+    switch input {
+      case "h":
+        self.level = Level.HARD
+      case "m":
+        self.level = Level.MEDIUM
+      default:
+        self.level = Level.EASY
+    }
+  }
+  
+  func getCategory() {
+    print("Categories:")
+    print("Classic - 0")
+    print("Films - 1")
+    print("Countries - 2")
+
+    let input = readLine()
+    switch input {
+      case "1":
+        self.base = self.film_base
+      case "2":
+        self.base = self.country_base
+      default:
+        self.base = self.classic_base
+    }
+  }
+
+  func newGame() {
+    self.getCategory()
+    self.getLevel()
+    (self.board, self.word) = self.level.getNewBoard(self.base)
+    self.attempts = 0
+  }
+
+  func readChar() -> Character {
+    while true {
+      if let input = readLine(), input.count == 1, let firstChar = input.first {
+        return firstChar
+      }
+    }
+  }  
+
+  func readString() -> String {
+    while true {
+      if let input = readLine(), input.count > 0 {
+        return input
+      }
+    }
+  }
+
+
+  func gameLoop () {
+    while true {
+      self.drawBoard()
+      print("Enter a letter: ")
+      let buffor = self.readString()
+      if buffor.count > 1 {
+        self.checkBuffor(buffor)
+      }
+      else {
+          if let char = buffor.first { checkChar(char) }
+      }
+      self.attempts += 1 
+
+      if (self.isWin() || self.attempts > 10) {
+        if (self.attempts > 10) {
+            print("You lose")
+        }
+        else {
+            print("You won in \(self.attempts) attempts!")
+        }
+        print("Quit - q")
+        print("New game - n")
+
+        let input = self.readChar()
+        if input == "q" {
+          break
+        } else {
+          self.newGame()
+        }
+      }
+    }
+  }
+}
+
+let game = Game()
+game.gameLoop()
