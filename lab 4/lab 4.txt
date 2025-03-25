@@ -1,4 +1,4 @@
-// zrobione wszystkie 5/5
+// zrobione wszystkie 5/5 
 import Foundation
 
 enum Level: Int {
