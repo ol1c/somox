@@ -1,0 +1,223 @@
+// zrobione wszystkie 5/5 i dodatkowy JSON 2/2
+import Foundation
+
+enum MediaType {
+    case PICTURE
+    case VIDEO
+    case SOUND
+    
+    var description: String {
+        switch self {
+            case .PICTURE: return "PICTURE"
+            case .VIDEO: return "VIDEO"
+            case .SOUND: return "SOUND"
+        }
+    }
+}
+
+class Media {
+    let src: String
+    let mediaType: MediaType
+    init(_ src: String, _ type: MediaType) {
+        self.src = src
+        self.mediaType = type
+    }
+    func getInfo() -> (mediaType: MediaType, desc: String) {
+        return (mediaType: self.mediaType, desc: "\(self.src)")
+    }
+}
+
+class Picture: Media {
+    let height: Int
+    let width: Int
+    init(_ src: String, _ width: Int, _ height: Int) {
+        self.width = width
+        self.height = height
+        super.init(src, MediaType.PICTURE)
+    }
+    override func getInfo() -> (mediaType: MediaType, desc: String) {
+        return (mediaType: self.mediaType, desc: "\(self.src): \(self.width)x\(self.height)")
+    }
+}
+
+class Video: Media {
+    let height: Int
+    let width: Int
+    let duration: Int
+    init(_ src: String, _ width: Int, _ height: Int, _ duration: Int) {
+        self.width = width
+        self.height = height
+        self.duration = duration
+        super.init(src, MediaType.VIDEO)
+    }
+    override func getInfo() -> (mediaType: MediaType, desc: String) {
+        return (mediaType: self.mediaType, desc: "\(self.src): \(self.width)x\(self.height) \(self.duration)s")
+    }
+}
+
+class Sound: Media {
+    let duration: Int
+    init(_ src: String, _ duration: Int) {
+        self.duration = duration
+        super.init(src, MediaType.SOUND)
+    }
+    override func getInfo() -> (mediaType: MediaType, desc: String) {
+        return (mediaType: self.mediaType, desc: "\(self.src): \(self.duration)s")
+    }
+}
+
+class Mail {
+    let id: Int
+    let from: String
+    let to: String
+    let message: String
+    var attachments: [Media] = []
+    init(_ id: Int, _ from: String, _ to: String, _ message: String, _ attachments: [Media] = []) {
+        self.id = id
+        self.from = from
+        self.to = to
+        self.message = message
+        self.attachments = attachments
+    }
+    func addAttachment(_ attachment: Media) {
+        self.attachments.append(attachment)
+    }
+    func toPrint() {
+        print("From: \(self.from) | To: \(self.to)")
+        print("     \(self.message)")
+        if self.attachments.count > 0 {
+            print("Attachments:")
+            for media in self.attachments {
+                let mediaDesc = media.getInfo()
+                print("  \(mediaDesc.mediaType) - \(mediaDesc.desc)")
+            }
+        }
+    }
+}
+
+// additional JSON part
+struct EmailData: Codable {
+    let emails: [MailData]
+}
+
+struct MailData: Codable {
+    let id: Int
+    let from: String
+    let to: String
+    let message: String
+    let attachments: [AttachmentData]
+}
+
+struct AttachmentData: Codable {
+    let src: String
+    let type: String
+    let width: Int?
+    let height: Int?
+    let duration: Int?
+}
+
+class Email {
+    let owner: String
+    var nMails: Int
+    var mailbox: [Mail] = []
+    init(_ owner: String) {
+        self.owner = owner
+        self.nMails = 0
+    }
+    func sendMail(to: String, message: String, attachments: [Media] = []) {
+        self.mailbox.append(Mail(self.nMails+1, self.owner, to, message, attachments))
+    }
+    func showMails() {
+        for mail in self.mailbox {
+            mail.toPrint()
+            print(" ")
+        }
+    }
+    
+    //additional functions with JSON
+    func loadFromJson(jsonData: Data) {
+        do {
+            let decoder = JSONDecoder()
+            let emailData = try decoder.decode(EmailData.self, from: jsonData)
+            
+            self.mailbox.removeAll()
+            
+            for mail in emailData.emails {
+                var attachments: [Media] = []
+                
+                for attachment in mail.attachments {
+                    switch attachment.type {
+                        case "PICTURE":
+                            if let width = attachment.width, let height = attachment.height {
+                                attachments.append(Picture(attachment.src, width, height))
+                            }
+                        case "VIDEO":
+                            if let width = attachment.width, let height = attachment.height, let duration = attachment.duration {
+                                attachments.append(Video(attachment.src, width, height, duration))
+                            }
+                        case "SOUND":
+                            if let duration = attachment.duration {
+                                attachments.append(Sound(attachment.src, duration))
+                            }
+                        default:
+                            continue
+                    }
+                }
+                
+                self.mailbox.append(Mail(mail.id, mail.from, mail.to, mail.message, attachments))
+            }
+            print("Loaded from JSON!")
+        } catch {
+            print("error: \(error)")
+        }
+        print(" ")
+    }
+    
+    func saveToJson() -> Data? {
+        let emailData = EmailData(emails: mailbox.map { mail in
+            MailData(
+                id: mail.id,
+                from: mail.from,
+                to: mail.to,
+                message: mail.message,
+                attachments: mail.attachments.map { attachment in
+                    if let pic = attachment as? Picture {
+                        return AttachmentData(src: pic.src, type: "PICTURE", width: pic.width, height: pic.height, duration: nil)
+                    } else if let vid = attachment as? Video {
+                        return AttachmentData(src: vid.src, type: "VIDEO", width: vid.width, height: vid.height, duration: vid.duration)
+                    } else if let snd = attachment as? Sound {
+                        return AttachmentData(src: snd.src, type: "SOUND", width: nil, height: nil, duration: snd.duration)
+                    } else {
+                        return AttachmentData(src: attachment.src, type: "UNKNOWN", width: nil, height: nil, duration: nil)
+                    }
+                }
+            )
+        })
+        
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            return try encoder.encode(emailData)
+        } catch {
+            print("error \(error)")
+            return nil
+        }
+    }
+}
+
+
+let myEmail = Email("me")
+myEmail.sendMail(to: "Kuba", message: "Cześć")
+myEmail.sendMail(to: "Kuba", message: "Przesyłam ci plik z dźwiękiem", attachments: [Sound("sound.mp3", 60)])
+myEmail.sendMail(to: "Anna", message: "Zdjęcie z wakacji", attachments: [Picture("photo.jpg", 1920, 1080)])
+myEmail.sendMail(to: "Piotr", message: "Filmik", attachments: [Video("video.mp4", 1280, 720, 120)])
+myEmail.showMails()
+
+if let jsonData = myEmail.saveToJson() {
+    print("Saved to JSON\n", String(data: jsonData, encoding: .utf8)!)
+
+    let newEmail = Email("new me")
+    newEmail.loadFromJson(jsonData: jsonData)
+    newEmail.sendMail(to: "Kuba", message: "To mój nowy email")
+    newEmail.showMails()
+}
