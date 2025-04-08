@@ -1,0 +1,139 @@
+// zrobione wszystkie 5/5 (dodatkowy element dziennik)
+import Foundation
+
+func randomEncounter() -> Creature {
+    let creatureBase = ["The Groke", "Hattifattener", "Stinky"]
+    return Creature(creatureBase.randomElement() ?? "The Groke",
+                    Int.random(in: 1...3),
+                    Int.random(in: 5...10))
+}
+
+func talkToCreature(_ player: MoominCharacter, _ creature: Creature) {
+    print("\(player.name) talks to \(creature.name)")
+    creature.updatePatience(player.friendship)
+    if !creature.isCalm {
+        player.updateHealth(creature.mood)
+    }
+}
+
+func runAway(_ player: MoominCharacter, _ creature: Creature) {
+    if Bool.random() {
+        print("\(creature.name) harms you")
+        player.updateHealth(creature.mood)
+    }
+    else {
+        print("\(player.name) escaped")
+    }
+}
+
+func handleEncounter(_ player: MoominCharacter, _ creature: Creature) {
+    print("\(player.name) (hp:\(player.health))")
+    print("1 - Talk to \(creature.name) (hp:\(creature.patience))")
+    print("2 - Run away")
+    var endInteraction = false
+    while !endInteraction {
+        if let input = readLine() {
+            switch input {
+                case "1":
+                    talkToCreature(player, creature)
+                    endInteraction = true
+                case "2":
+                    runAway(player, creature)
+                    endInteraction = true
+                default:
+                    print("Chose option 1 or 2")
+            }
+        }
+    }
+    if !player.isHealthy {
+        print("End game")
+    }
+    if creature.isCalm {
+        print("You calmed \(creature.name)")
+        player.levelUp()
+    }
+}
+
+class MoominCharacter {
+    let name: String
+    var health: Int
+    var friendship: Int
+    var level: Int
+    var isHealthy: Bool = true
+    init(_ name: String) {
+        self.name = name
+        self.level = 1
+        self.health = 10
+        self.friendship = 2
+        self.updateHealth()
+    }
+    
+    func levelUp() {
+        self.level += 1
+        self.health += 10
+        self.friendship += (self.health + self.level)/10
+        print("Level Up!")
+    }
+    
+    func updateHealth(_ damage: Int = 0) {
+        self.health -= damage
+        if self.health > 0 {
+            self.isHealthy = true
+        }
+        else {
+            self.isHealthy = false
+        }
+    }
+    
+    func toString() -> String {
+        return "\(self.name) (\(self.level)lvl, hp:\(self.health), power:\(self.friendship))"
+    }
+}
+
+class Creature {
+    let name: String
+    let mood: Int
+    var patience: Int
+    var isCalm: Bool = true
+    init(_ name: String, _ mood: Int, _ patience: Int) {
+        self.name = name
+        self.mood = mood
+        self.patience = patience
+        self.updatePatience()
+    }
+    
+    func updatePatience(_ charm: Int = 0) {
+        self.patience -= charm
+        if self.patience > 0 {
+            self.isCalm = false
+        }
+        else {
+            self.isCalm = true
+        }
+    }
+    
+    func toString() -> String {
+        return "\(self.name) (hp:\(self.patience), mood:\(self.mood))"
+    }
+}
+
+
+let player = MoominCharacter("Moomintroll")
+var journal: [String] = []
+while player.isHealthy {
+    let creature = randomEncounter()
+    print("\(player.toString()) encounters \(creature.toString()))")
+    while !creature.isCalm {
+        journal.append("\(player.toString()) encounters \(creature.toString()))")
+        handleEncounter(player, creature)
+        if !player.isHealthy {
+            journal.append("\(player.name) went crazy and hid in the forest (end game)")
+            break
+        }
+    }
+}
+
+print(" ")
+for journalNote in journal {
+    print(journalNote)
+}
