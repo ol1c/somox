@@ -1,4 +1,4 @@
-// zrobione wszystkie 5/5 (dodatkowy element dziennik)
+// Oliwier Komorowski 197808 zrobione wszystkie 5/5 (dodatkowy element dziennik)
 import Foundation
 
 func randomEncounter() -> Creature {
@@ -30,6 +30,7 @@ func handleEncounter(_ player: MoominCharacter, _ creature: Creature) {
     print("\(player.name) (hp:\(player.health))")
     print("1 - Talk to \(creature.name) (hp:\(creature.patience))")
     print("2 - Run away")
+    print("3 - Quit")
     var endInteraction = false
     while !endInteraction {
         if let input = readLine() {
@@ -39,6 +40,9 @@ func handleEncounter(_ player: MoominCharacter, _ creature: Creature) {
                     endInteraction = true
                 case "2":
                     runAway(player, creature)
+                    endInteraction = true
+                case "3":
+                    player.quit = true
                     endInteraction = true
                 default:
                     print("Chose option 1 or 2")
@@ -60,6 +64,7 @@ class MoominCharacter {
     var friendship: Int
     var level: Int
     var isHealthy: Bool = true
+    var quit: Bool = false
     init(_ name: String) {
         self.name = name
         self.level = 1
@@ -120,14 +125,14 @@ class Creature {
 
 let player = MoominCharacter("Moomintroll")
 var journal: [String] = []
-while player.isHealthy {
+while player.isHealthy && !player.quit {
     let creature = randomEncounter()
     print("\(player.toString()) encounters \(creature.toString()))")
-    while !creature.isCalm {
+    while !creature.isCalm && !player.quit {
         journal.append("\(player.toString()) encounters \(creature.toString()))")
         handleEncounter(player, creature)
-        if !player.isHealthy {
-            journal.append("\(player.name) went crazy and hid in the forest (end game)")
+        if !player.isHealthy || player.quit {
+            journal.append("\(player.name) hid in the forest (end game)")
             break
         }
     }
