@@ -1,0 +1,235 @@
+// Oliwier Komorowski 197808 zrobione wszystkie 5/5
+class Player {
+    let mark: String
+    init(_ mark: String) {
+        self.mark = mark
+    }
+    
+    func getMark() -> String {
+        return self.mark
+    }
+    
+    func move(_ size: Int) -> (x: Int, y: Int) {
+        print("Select row (1...\(size)): ")
+        var col = 0
+        var row = 0
+        while(true) {
+            if let rowInput = readLine(), let r = Int(rowInput), (1...size).contains(r) {
+                row = r-1
+                break;
+            }
+            else {
+                print("Incorrect row id")
+            }
+        }
+        print("Select column (1...\(size)): ")
+        while(true) {
+            if let colInput = readLine(), let c = Int(colInput), (1...size).contains(c) {
+                col = c-1
+                break;
+            }
+            else {
+            print("Incorrect column id")
+            }
+        }
+        return (x: row, y: col)
+    }
+}
+
+class AIPlayer: Player {
+    override func move(_ size: Int) -> (x: Int, y: Int) {
+        return (x: Int.random(in: 0..<size), y: Int.random(in: 0..<size))
+    }
+}
+
+class TicTacToe {
+    var size: Int
+    var board: [[String]]
+    var players: [Player] = []
+    
+    init(_ p1: Player, _ p2: Player) {
+        self.size = 3
+        self.players.append(p1)
+        self.players.append(p2)
+        self.board = Array(repeating: Array(repeating: "_", count: self.size), count: self.size)
+    }
+    
+    func mainLoop() {
+        var quit = false
+        while(!quit) {
+            self.selectLevel()
+            self.gameLoop()
+            print("N - new game")
+            print("Q - quit")
+            while(true) {
+                if let input = readLine()?.uppercased() {
+                    if input == "Q" {
+                        quit = true
+                        break
+                    } 
+                    else if input == "N" {
+                       // self.board = Array(repeating: Array(repeating: "_", count: self.size), count: self.size)
+                        break
+                    } 
+                    else {
+                        print("Incorrect input")
+                    }
+                }
+            }
+        }
+    }
+    
+    func selectLevel() {
+        print("Select level:")
+        print("1 - Easy(3x3)")
+        print("2 - Medium(4x4)")
+        print("3 - Hard(5x5)")
+        while(true) {
+            if let input = readLine()?.uppercased() {
+                if input == "1" {
+                    self.newBoard(3)
+                    break
+                } 
+                else if input == "2" {
+                    self.newBoard(4)
+                    break
+                } 
+                else if input == "3" {
+                    self.newBoard(5)
+                    break
+                } 
+                else {
+                    print("Incorrect input")
+                }
+            }
+        }
+    }
+    
+    func newBoard(_ size: Int) {
+        self.size = size
+       self.board = Array(repeating: Array(repeating: "_", count: self.size), count: self.size) 
+    }
+    
+    func gameLoop() {
+        self.printBoard()
+        while(!isBoardFull()) {
+            self.playerMove(0)
+            if(self.isWin()) {
+                print("Player \(self.players[0].getMark()) wins!")
+                break
+            }
+            self.playerMove(1)
+            if(self.isWin()) {
+                print("Player \(self.players[1].getMark()) wins!")
+                break
+            }
+        }
+    }
+    
+    func playerMove(_ id: Int) {
+        let player = self.players[id]
+        while(true) {
+            let move = player.move(self.size)
+            if(self.board[move.x][move.y] == "_") {
+                self.board[move.x][move.y] = player.getMark()
+                break
+            }
+            else {
+                print("The field is already occupied")
+            }
+        }
+        self.printBoard()
+    }
+    
+    func printBoard() {
+        let lines = self.board.map{ $0.joined(separator: " ") }
+        print(lines.joined(separator: "\n"))
+        print(" ")
+    }
+    
+    func isBoardFull() -> Bool {
+        for i in 0..<self.size {
+            for j in 0..<self.size {
+                if(self.board[i][j] == "_") {
+                    return false
+                }
+            }
+        }
+        print("Draw")
+        return true
+    }
+    
+    func isWin() -> Bool {
+        // rows
+        for i in 0..<self.size {
+            var lastChar = " "
+            var occurrence = 0
+            for j in 0..<self.size {
+                if(lastChar == self.board[i][j]) {
+                    occurrence += 1
+                    if(occurrence >= 3 && lastChar != "_") {
+                        return true
+                    }
+                }
+                else {
+                    lastChar = self.board[i][j]
+                    occurrence = 1
+                }
+            }
+        }
+        // columns
+        for j in 0..<self.size {
+            var lastChar = " "
+            var occurrence = 0
+            for i in 0..<self.size {
+                if(lastChar == self.board[i][j]) {
+                    occurrence += 1
+                    if(occurrence >= 3 && lastChar != "_") {
+                        return true
+                    }
+                }
+                else {
+                    lastChar = self.board[i][j]
+                    occurrence = 1
+                }
+            }
+        }
+        // diagonals
+        for i in 0..<self.size-2 {
+            for j in 0..<self.size-2 {
+                var lastChar = " "
+                var occurrence = 0
+                for ii in 0..<3 {
+                    if(lastChar == self.board[i+ii][j+ii]) {
+                        occurrence += 1
+                        if(occurrence >= 3 && lastChar != "_") {
+                            return true
+                        }
+                    }
+                    else {
+                        lastChar = self.board[i+ii][j+ii]
+                        occurrence = 1
+                    }
+                }
+                lastChar = " "
+                occurrence = 0
+                for ii in 0..<3 {
+                    if(lastChar == self.board[i+ii][self.size-1-j-ii]) {
+                        occurrence += 1
+                        if(occurrence >= 3 && lastChar != "_") {
+                            return true
+                        }
+                    }
+                    else {
+                        lastChar = self.board[i+ii][self.size-1-j-ii]
+                        occurrence = 1
+                    }
+                }
+            }
+        }
+        return false
+    }
+}
+
+var game = TicTacToe(Player("$"), AIPlayer("X"))
+game.mainLoop()
